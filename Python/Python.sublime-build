@@ -1,0 +1,5 @@
+{
+	"target": "my_fuck_py_build",
+	"selector": "source.python",
+	"cancel": {"kill": true},
+}
