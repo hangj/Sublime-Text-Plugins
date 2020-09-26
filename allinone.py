@@ -1,0 +1,223 @@
+import sublime
+import sublime_plugin
+import datetime, getpass
+import re
+
+import subprocess
+import threading
+import os
+
+# 插数字
+class InsertNumberCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        self.view.window().show_input_panel("input start and step:", "start:1, step:1", lambda text: self.view.run_command('insert_number_cb', {"text": text}), None, None)
+
+
+class InsertNumberCbCommand(sublime_plugin.TextCommand):
+    def run(self, edit, text):
+        # sublime.message_dialog(text)
+        text =  re.sub(r"[^\d\+-]*([\+-]?\d+)[,\s\t]+[^\d\+-]*([\+-]?\d+)", r"\1 \2", text)
+        numbers = text.split(" ")
+        start_num   = int(numbers[0])
+        diff_num    = int(numbers[1])
+        for region in self.view.sel():
+            #(row,col) = self.view.rowcol(region.begin())
+            self.view.insert(edit, region.end(), "%d" %start_num)
+            start_num += diff_num
+
+# 求和
+class SumCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        sum_all = 0
+        for region in self.view.sel():
+            add = 0
+            str_region = self.view.substr(region)
+            try:
+                add = int(str_region)
+            except ValueError:
+                sublime.error_message(u"含有非数字的字符串")
+                return
+            sum_all = sum_all + add
+
+        sublime.message_dialog(str(sum_all))
+
+class SelectWordCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        for region in self.view.sel():
+            reg = self.view.word(region)
+            self.view.sel().add(reg)
+
+# 独立选择每一行(在当前选中范围内)
+class SelectEverySingleLine(sublime_plugin.TextCommand):
+    def run(self, edit):
+        # self.view.run_command('select_all')
+        # for region in self.view.lines(sublime.Region(0, self.view.size())):
+        #     self.view.selection.add(region)
+
+        lines = []
+        for region in self.view.sel():
+            for l in self.view.lines(region):
+                if l.a != l.b:
+                    lines.append(l)
+                # self.view.selection.add(l)
+        self.view.selection.clear()
+        for l in lines:
+            self.view.selection.add(l)
+
+class ShowOutputPanel(sublime_plugin.TextCommand):
+    def run(self, edit):
+        w = self.view.window()
+        w.run_command('show_panel', {'panel': 'output.exec'})
+
+class MyFuckPyBuildCommand(sublime_plugin.WindowCommand):
+    encoding = 'utf-8'
+    killed = False
+    proc = None
+    panel = None
+    panel_lock = threading.Lock()
+
+    def is_enabled(self, kill=False):
+        # The Cancel build option should only be available
+        # when the process is still running
+        if kill:
+            return self.proc is not None and self.proc.poll() is None
+        return True
+
+    def detect_version(self):
+        fname = self.window.active_view ().file_name()
+        with open(fname, 'r', encoding='utf-8') as f:
+            line = f.readline()
+
+        m = re.search(r'(python[0-9\.]*)', line)
+        if m and line.startswith("#"):
+            return m.group(1)
+        return "python"
+
+    def run(self, kill=False, *l, **kwargs):
+        if kill:
+            if self.proc is not None and self.proc.poll() is None:
+                self.killed = True
+                self.proc.terminate()
+                self.proc = None
+            sublime.message_dialog('Build Cancelled!')
+            return
+
+        vars = self.window.extract_variables()
+        working_dir = vars['file_path']
+
+        # A lock is used to ensure only one thread is
+        # touching the output panel at a time
+        with self.panel_lock:
+            # Creating the panel implicitly clears any previous contents
+            self.panel = self.window.create_output_panel('exec')
+
+            # Enable result navigation. The result_file_regex does
+            # the primary matching, but result_line_regex is used
+            # when build output includes some entries that only
+            # contain line/column info beneath a previous line
+            # listing the file info. The result_base_dir sets the
+            # path to resolve relative file names against.
+            settings = self.panel.settings()
+            settings.set(
+                'result_file_regex',
+                r'^File "([^"]+)" line (\d+) col (\d+)'
+            )
+            settings.set(
+                'result_line_regex',
+                r'^\s+line (\d+) col (\d+)'
+            )
+            settings.set('result_base_dir', working_dir)
+
+            self.window.run_command('show_panel', {'panel': 'output.exec'})
+
+        if self.proc is not None and self.proc.poll() is None:
+            self.proc.terminate()
+            self.proc = None
+
+        args = [ self.detect_version() ]
+        # sublime.message_dialog(vars['file_name'])
+        args.append(vars['file_name'])
+        env = os.environ.copy()
+        env["PYTHONUNBUFFERED"] = "1" # 及时 print
+        self.proc = subprocess.Popen(
+            args,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            cwd=working_dir,
+            env=env,
+        )
+        self.killed = False
+
+        threading.Thread(
+            target=self.read_handle,
+            args=(self.proc.stdout,)
+        ).start()
+
+    def read_handle(self, handle):
+        # for line in iter(handle.readline, b''):
+        #     self.queue_write(line.decode(self.encoding))
+        # handle.close()
+        # return
+
+        chunk_size = 2 ** 13
+        out = b''
+        while True:
+            try:
+                # sublime.message_dialog('fuck1')
+                data = os.read(handle.fileno(), chunk_size)
+                # If exactly the requested number of bytes was
+                # read, there may be more data, and the current
+                # data may contain part of a multibyte char
+                out += data
+                if len(data) == chunk_size:
+                    continue
+                if data == b'' and out == b'':
+                    raise IOError('EOF')
+                # We pass out to a function to ensure the
+                # timeout gets the value of out right now,
+                # rather than a future (mutated) version
+                self.queue_write(out.decode(self.encoding))
+                if data == b'':
+                    raise IOError('EOF')
+                out = b''
+            except (UnicodeDecodeError) as e:
+                msg = 'Error decoding output using %s - %s'
+                self.queue_write(msg  % (self.encoding, str(e)))
+                break
+            except (IOError):
+                if self.killed:
+                    msg = 'Cancelled'
+                else:
+                    msg = 'Finished'
+                self.queue_write('\n[%s]' % msg)
+                break
+
+    def queue_write(self, text):
+        sublime.set_timeout(lambda: self.do_write(text), 1)
+
+    def do_write(self, text):
+        with self.panel_lock:
+            self.panel.run_command('append', {'characters': text})
+
+
+# 4 fun
+class HelloWorld(sublime_plugin.TextCommand):
+    def run(self, edit):
+        w = self.view.window()
+        p = w.create_output_panel('HelloWorld')
+        p.set_read_only(False)
+        w.run_command('show_panel', {'panel': 'output.HelloWorld'})
+        p.run_command('fuck', {'s': 'blablabla...'})
+        p.run_command('append', {'characters': 'blublublublu...'})
+
+
+class Fuck(sublime_plugin.TextCommand):
+    def run(self, edit, s):
+        self.view.insert(edit, self.view.size(), s)
+
+
+
+
+
+
