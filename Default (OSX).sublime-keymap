@@ -1,0 +1,10 @@
+[
+    { "keys": ["super+shift+f5"], "command": "insert_number" },
+    { "keys": ["super+shift+a"], "command": "select_every_single_line" },
+    { "keys": ["super+shift+f6"], "command": "sum" },
+    { "keys": ["ctrl+b"], "command": "show_output_panel"},
+
+    { "keys": ["f3"], "command": "find_under" },
+    { "keys": ["shift+f3"], "command": "find_under_prev" },
+    { "keys": ["alt+f3"], "command": "find_all_under" },
+]
