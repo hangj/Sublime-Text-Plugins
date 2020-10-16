@@ -132,7 +132,7 @@ class MyFuckPyBuildCommand(sublime_plugin.WindowCommand):
         if kill:
             if self.proc is not None and self.proc.poll() is None:
                 self.killed = True
-                self.proc.terminate()
+                self.proc.terminate() # send SIGTERM
                 self.proc = None
             sublime.message_dialog('Build Cancelled!')
             return
