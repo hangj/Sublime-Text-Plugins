@@ -57,18 +57,18 @@ class AutoAlignmentCommand(sublime_plugin.TextCommand):
                 sublime.error_message(u"不能在同一行选中两个位置！！")
                 return -1
             pre_row = row
-            point_end = region.end()
-            vec_pos = self.view.text_to_layout(point_end)
+            point_begin = region.begin()
+            vec_pos = self.view.text_to_layout(point_begin)
             if vec_pos[0] > pos_max_x:
                 print(vec_pos[0])
                 pos_max_x = vec_pos[0]
 
         is_finished = True
         for region in self.view.sel():
-            pos_cur_x = self.view.text_to_layout(region.end())[0]
+            pos_cur_x = self.view.text_to_layout(region.begin())[0]
             print("pos_cur_x", pos_cur_x)
             if pos_cur_x < pos_max_x:
-                self.view.insert(edit, region.end(), "\t")
+                self.view.insert(edit, region.begin(), "\t")
                 is_finished = False
 
         return is_finished
