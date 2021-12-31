@@ -1,5 +1,6 @@
 import sublime
 import sublime_plugin
+import sublime_api
 import datetime, getpass
 import re
 
@@ -250,6 +251,41 @@ class HelloWorld(sublime_plugin.TextCommand):
 class Fuck(sublime_plugin.TextCommand):
     def run(self, edit, s):
         self.view.insert(edit, self.view.size(), s)
+
+
+class HookCommand(sublime_plugin.EventListener):
+    def on_window_command(self, window, command_name, args):
+        print('on_window_command:', command_name, args)
+        return None
+
+# use everything.exe as backend, real goto anywhere on my computer.
+# get https://www.voidtools.com/support/everything/sdk/python/ sdk, rename as es.py, and put it in C:\Users\Administrator\AppData\Roaming\Sublime Text 3\Packages\User\
+# D:\Program Files\Sublime Text\Lib\python38\sublime.py
+# https://www.sublimetext.com/docs/api_reference.html#sublime.Window.show_quick_panel
+class QuickOpenCommand(sublime_plugin.WindowCommand):
+    def on_select(self, idx, b):
+        # print('result:', idx, b)
+        if idx > -1:
+            print('selected file:', self.items[idx])
+            self.window.open_file(self.items[idx])
+
+    def run(self):
+        import platform
+        if platform.system() != 'Windows':
+            return
+        import User.es as es # https://www.voidtools.com/support/everything/sdk/python/
+
+        self.items, t1, t2, t3 = es.es('')
+        print('t:', t1, t2, t3)
+        # self.window.show_quick_panel(self.items, self.on_select, sublime.WANT_EVENT, -1, None, '')
+        sublime_api.window_show_quick_panel(
+            self.window.window_id, self.items, self.on_select, None,
+            sublime.WANT_EVENT, -1, '')
+        # self.window.show_input_panel('test', 'hello', self.hl, self.hl, None)
+
+# window.panels()
+# window.find_output_panel('output.exec')
+
 
 
 
