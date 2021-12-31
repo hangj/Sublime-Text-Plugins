@@ -268,6 +268,8 @@ class QuickOpenCommand(sublime_plugin.WindowCommand):
         if idx > -1:
             print('selected file:', self.items[idx])
             self.window.open_file(self.items[idx])
+    def on_hl(self, idx):
+        self.window.open_file(self.items[idx], sublime.TRANSIENT)
 
     def run(self):
         import platform
@@ -279,7 +281,7 @@ class QuickOpenCommand(sublime_plugin.WindowCommand):
         print('t:', t1, t2, t3)
         # self.window.show_quick_panel(self.items, self.on_select, sublime.WANT_EVENT, -1, None, '')
         sublime_api.window_show_quick_panel(
-            self.window.window_id, self.items, self.on_select, None,
+            self.window.window_id, self.items, self.on_select, self.on_hl,
             sublime.WANT_EVENT, -1, '')
         # self.window.show_input_panel('test', 'hello', self.hl, self.hl, None)
 
@@ -287,6 +289,21 @@ class QuickOpenCommand(sublime_plugin.WindowCommand):
 # window.find_output_panel('output.exec')
 
 
+class QuitFindResultsCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        print(self.view.name(), self.view.file_name())
+
+        if self.view.file_name():
+            if self.view.file_name().endswith('.sublime-keymap') or self.view.file_name().endswith('.sublime-settings'):
+                self.view.close()
+                return
+
+        if self.view.name() == 'Find Results':
+            self.view.close()
+            return
+
+        # default [escape]
+        self.view.window().run_command('cancel')
 
 
 
