@@ -69,7 +69,7 @@ class AutoAlignmentCommand(sublime_plugin.TextCommand):
             pos_cur_x = self.view.text_to_layout(region.begin())[0]
             print("pos_cur_x", pos_cur_x)
             if pos_cur_x < pos_max_x:
-                self.view.insert(edit, region.begin(), "\t")
+                self.view.insert(edit, region.begin(), " ")
                 is_finished = False
 
         return is_finished
