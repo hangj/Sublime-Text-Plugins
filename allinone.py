@@ -257,6 +257,9 @@ class HookCommand(sublime_plugin.EventListener):
     def on_window_command(self, window, command_name, args):
         print('on_window_command:', command_name, args)
         return None
+    def on_pre_save(self, view):
+        view.set_encoding('utf-8')
+        view.run_command('expand_tabs')
 
 # use everything.exe as backend, real goto anywhere on my computer.
 # get https://www.voidtools.com/support/everything/sdk/python/ sdk, rename as es.py, and put it in C:\Users\Administrator\AppData\Roaming\Sublime Text 3\Packages\User\
