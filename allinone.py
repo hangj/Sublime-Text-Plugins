@@ -258,8 +258,22 @@ class HookCommand(sublime_plugin.EventListener):
         print('on_window_command:', command_name, args)
         return None
     def on_pre_save(self, view):
-        view.set_encoding('utf-8')
         view.run_command('expand_tabs')
+    def on_load(self, view):
+        print('on_load:', view.encoding())
+        if view.encoding().lower() != 'utf-8':
+            try:
+                # GB18030 与 GB2312 和 GBK 兼容
+                with open(view.file_name(), 'r', encoding='GB18030') as f:
+                    text = f.read(1024)
+                    f_tmp = open(view.file_name()+'.tmp~', 'w', encoding='utf-8')
+                    while text:
+                        f_tmp.write(text)
+                        text = f.read(1024)
+                os.rename(view.file_name()+'.tmp~', view.file_name())
+            except Exception as e:
+                print(e)
+
 
 # use everything.exe as backend, real goto anywhere on my computer.
 # get https://www.voidtools.com/support/everything/sdk/python/ sdk, rename as es.py, and put it in C:\Users\Administrator\AppData\Roaming\Sublime Text 3\Packages\User\
