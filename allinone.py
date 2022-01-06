@@ -266,11 +266,12 @@ class HookCommand(sublime_plugin.EventListener):
                 # GB18030 与 GB2312 和 GBK 兼容
                 with open(view.file_name(), 'r', encoding='GB18030') as f:
                     text = f.read(1024)
-                    f_tmp = open(view.file_name()+'.tmp~', 'w', encoding='utf-8')
+                    f_tmp = open(view.file_name()+'.utf8~', 'w', encoding='utf-8')
                     while text:
                         f_tmp.write(text)
                         text = f.read(1024)
-                os.rename(view.file_name()+'.tmp~', view.file_name())
+                    f_tmp.close()
+                os.rename(view.file_name()+'.utf8~', view.file_name())
             except Exception as e:
                 print(e)
 
