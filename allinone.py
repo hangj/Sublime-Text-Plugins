@@ -261,19 +261,22 @@ class HookCommand(sublime_plugin.EventListener):
         view.run_command('expand_tabs')
     def on_load(self, view):
         print('on_load:', view.encoding())
-        if view.encoding().lower() != 'utf-8':
-            try:
-                # GB18030 与 GB2312 和 GBK 兼容
-                with open(view.file_name(), 'r', encoding='GB18030') as f:
+        if view.encoding() == 'Undefined':
+            return
+        if view.encoding().lower() == 'utf-8':
+            return
+        try:
+            # GB18030 与 GB2312 和 GBK 兼容
+            with open(view.file_name(), 'r', encoding='GB18030') as f:
+                text = f.read(1024)
+                f_tmp = open(view.file_name()+'.utf8~', 'w', encoding='utf-8')
+                while text:
+                    f_tmp.write(text)
                     text = f.read(1024)
-                    f_tmp = open(view.file_name()+'.utf8~', 'w', encoding='utf-8')
-                    while text:
-                        f_tmp.write(text)
-                        text = f.read(1024)
-                    f_tmp.close()
-                os.replace(view.file_name()+'.utf8~', view.file_name())
-            except Exception as e:
-                print(e)
+                f_tmp.close()
+            os.replace(view.file_name()+'.utf8~', view.file_name())
+        except Exception as e:
+            print(e)
 
 
 # use everything.exe as backend, real goto anywhere on my computer.
