@@ -271,7 +271,7 @@ class HookCommand(sublime_plugin.EventListener):
                         f_tmp.write(text)
                         text = f.read(1024)
                     f_tmp.close()
-                os.rename(view.file_name()+'.utf8~', view.file_name())
+                os.replace(view.file_name()+'.utf8~', view.file_name())
             except Exception as e:
                 print(e)
 
