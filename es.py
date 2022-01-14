@@ -83,7 +83,7 @@ def get_time(filetime):
 def es(fname, reg=False, case=False):
     ts_start_search = time.time()
     #setup search
-    everything_dll.Everything_SetSearchW(fname) # "allinone.*\\.py$"
+    everything_dll.Everything_SetSearchW(f'!__pycache__ !C:\\Windows\\servicing\\ !C:\\Windows\\WinSxS !*.svn-base !*.pyd !*.pdb !*.pyc !*.dll !*.lnk !*.ics file: {fname}') # "allinone.*\\.py$"
     everything_dll.Everything_SetRegex(reg and 1 or 0)
     everything_dll.Everything_SetMatchCase(case and 1 or 0)
     # everything_dll.Everything_SetMax(400)
