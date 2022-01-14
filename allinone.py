@@ -298,7 +298,7 @@ class QuickOpenCommand(sublime_plugin.WindowCommand):
             return
         import User.es as es # https://www.voidtools.com/support/everything/sdk/python/
 
-        self.items, t1, t2, t3 = es.es('')
+        self.items, t1, t2, t3 = es.es('*.h|*.c|*.cc|*.cpp|*.cxx|*.lua|*.py|*.conf|*.txt|*.md|*.xml|*.sh|')
         print('t:', t1, t2, t3)
         # self.window.show_quick_panel(self.items, self.on_select, sublime.WANT_EVENT, -1, None, '')
         sublime_api.window_show_quick_panel(
