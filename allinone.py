@@ -49,39 +49,32 @@ class SelectWordCommand(sublime_plugin.TextCommand):
             self.view.sel().add(reg)
 # 多行对齐
 class AutoAlignmentCommand(sublime_plugin.TextCommand):
-    def auto_align(self, edit):
+    def run(self, edit):
         pre_row = -1
         pos_max_x = 0.0
         for region in self.view.sel():
             (row,col) = self.view.rowcol(region.begin())
             if row == pre_row:
                 sublime.error_message(u"不能在同一行选中两个位置！！")
-                return -1
+                return
             pre_row = row
-            point_begin = region.begin()
+            point_begin = region.begin() # region.end()
             vec_pos = self.view.text_to_layout(point_begin)
             if vec_pos[0] > pos_max_x:
                 print(vec_pos[0])
                 pos_max_x = vec_pos[0]
 
-        is_finished = True
-        for region in self.view.sel():
+        print('pos_max_x:', pos_max_x)
+        for i in range(len(self.view.sel())):
+            region = self.view.sel()[i]
             pos_cur_x = self.view.text_to_layout(region.begin())[0]
-            print("pos_cur_x", pos_cur_x)
-            if pos_cur_x < pos_max_x:
+            if pos_cur_x >= pos_max_x: continue
+            print("pos_cur_x:", pos_cur_x)
+            while pos_cur_x < pos_max_x:
                 self.view.insert(edit, region.begin(), " ")
-                is_finished = False
-
-        return is_finished
-
-    def run(self, edit):
-        count = 0
-        while True:
-            # 防止死循环,最多循环50次
-            count = count + 1
-            ret = self.auto_align(edit)
-            if count > 50 or ret == -1 or ret == True:
-                return
+                region = self.view.sel()[i]
+                pos_cur_x = self.view.text_to_layout(region.begin())[0]
+            print("pos_new_x:", self.view.text_to_layout(region.begin()))
 
 # 独立选择每一行(在当前选中范围内)
 class SelectEverySingleLine(sublime_plugin.TextCommand):
