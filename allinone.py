@@ -251,7 +251,7 @@ class HookCommand(sublime_plugin.EventListener):
         print('on_window_command:', command_name, args)
         return None
     def on_pre_save(self, view):
-        view.run_command('expand_tabs')
+        view.run_command('my_expand_tabs')
     def on_load(self, view):
         print('on_load:', view.encoding())
         if view.encoding() == 'Undefined':
@@ -320,6 +320,14 @@ class QuitFindResultsCommand(sublime_plugin.TextCommand):
         self.view.window().run_command('cancel')
 
 
+class MyExpandTabsCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
 
+        for region in view.lines(sublime.Region(0, view.size())):
+            src = view.substr(region)
+            dst = src.expandtabs(int(view.settings().get('tab_size', 4)))
+            if src != dst:
+                view.replace(edit, region, dst)
 
 
