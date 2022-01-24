@@ -324,7 +324,8 @@ class MyExpandTabsCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
 
-        for region in view.lines(sublime.Region(0, view.size())):
+        # reversed 是为了保证 expandtabs 之后不影响后续需要 expandtabs 的 str
+        for region in reversed(view.lines(sublime.Region(0, view.size()))):
             src = view.substr(region)
             dst = src.expandtabs(int(view.settings().get('tab_size', 4)))
             if src != dst:
