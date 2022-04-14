@@ -251,7 +251,8 @@ class HookCommand(sublime_plugin.EventListener):
         print('on_window_command:', command_name, args)
         return None
     def on_pre_save(self, view):
-        view.run_command('my_expand_tabs')
+        if not view.file_name().endswith('Makefile'):
+            view.run_command('my_expand_tabs')
     def on_load(self, view):
         print('on_load:', view.encoding())
         if view.encoding() == 'Undefined':
