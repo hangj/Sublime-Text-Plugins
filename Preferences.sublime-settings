@@ -1,14 +1,20 @@
 {
-	"ensure_newline_at_eof_on_save": true,
-	"font_size": 12,
 	"ignored_packages":
 	[
 		"Vintage"
 	],
 	"tab_size": 4,
+	"font_size": 12,
+	"ensure_newline_at_eof_on_save": true,
 	"translate_tabs_to_spaces": true,
 	"trim_trailing_white_space_on_save": true,
 	"scroll_past_end": true,
+	"find_selected_text": true,
+	"translate_tabs_to_spaces": true,
+    	"word_wrap": false,
+    	"default_encoding": "UTF-8",
+    	"show_encoding": true,
+    	"fallback_encoding": "GB18030",
 	
 	"folder_exclude_patterns":
 	[
