@@ -10,12 +10,11 @@ import os
 
 # 插数字
 class InsertNumberCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
-        self.view.window().show_input_panel("input start and step:", "start:1, step:1", lambda text: self.view.run_command('insert_number_cb', {"text": text}), None, None)
+    def run(self, edit, text = None):
+        if not text:
+            self.view.window().show_input_panel("input start and step:", "start:1, step:1", lambda text: self.view.run_command('insert_number', {"text": text}), None, None)
+            return
 
-
-class InsertNumberCbCommand(sublime_plugin.TextCommand):
-    def run(self, edit, text):
         # sublime.message_dialog(text)
         text =  re.sub(r"[^\d\+-]*([\+-]?\d+)[,\s\t]+[^\d\+-]*([\+-]?\d+)", r"\1 \2", text)
         numbers = text.split(" ")
@@ -353,4 +352,5 @@ class PipInstallCommand(sublime_plugin.TextCommand):
         # print(f"pip3 install --target '{p}' --upgrade {package}")
         # res = os.popen(f"pip3 install --target '{p}' --upgrade {package}").read()
         # print(res)
+
 
