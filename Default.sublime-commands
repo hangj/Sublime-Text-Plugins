@@ -1,0 +1,13 @@
+[
+  {
+    "caption": "allinone: pip install ",
+    "command": "pip_install",
+    // "args": {
+    //     "package": "pypinyin"
+    // }
+  },
+  {
+    "caption": "allinone: sum",
+    "command": "sum"
+  }
+]
