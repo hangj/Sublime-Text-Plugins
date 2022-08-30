@@ -332,4 +332,25 @@ class MyExpandTabsCommand(sublime_plugin.TextCommand):
             if src != dst:
                 view.replace(edit, region, dst)
 
+# pip install the package to sublime directory, then we can import it in this plugin file
+class PipInstallCommand(sublime_plugin.TextCommand):
+    def run(self, edit, package=None):
+        import sys, os
+
+        # sublime.executable_path()
+        # pkg_path = sublime.packages_path()
+
+        version = sys.version_info
+        p = [p for p in sys.path if f'Lib/python{version.major}{version.minor}' in p and 'Sublime Text ' in p]
+        p = p[0]
+
+        if not package:
+            self.view.window().show_input_panel("pip install ", "", lambda pkg: self.view.run_command('pip_install', {"package": pkg}), None, None)
+            return
+
+        self.view.window().run_command('exec', {'cmd': ['pip3', 'install', package, '--target', p, ], })
+
+        # print(f"pip3 install --target '{p}' --upgrade {package}")
+        # res = os.popen(f"pip3 install --target '{p}' --upgrade {package}").read()
+        # print(res)
 
