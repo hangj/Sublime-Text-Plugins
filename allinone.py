@@ -353,4 +353,71 @@ class PipInstallCommand(sublime_plugin.TextCommand):
         # res = os.popen(f"pip3 install --target '{p}' --upgrade {package}").read()
         # print(res)
 
+def auto_generate_sublime_commands():
 
+    def isclass(o):
+        return isinstance(o, type)
+
+    def get_name_from_cls(t, cls):
+        sep = '_' if t == 'command' else ' '
+        clsname = cls.__name__
+        name = clsname[0].lower()
+        last_upper = False
+        for c in clsname[1:]:
+            if c.isupper() and not last_upper:
+                name += sep
+                name += c.lower()
+            else:
+                name += c
+            last_upper = c.isupper()
+        if name.endswith(f"{sep}command"):
+            name = name[0:-8]
+        return name
+
+    # cwd = os.getcwd()
+    fdir = os.path.dirname(__file__)
+    basename = os.path.basename(__file__)
+    cur_plugin_name = os.path.splitext(basename)[0]
+    cfg = os.path.join(fdir, f'{cur_plugin_name}.sublime-commands')
+    if not os.path.isfile(cfg):
+        pathlib.Path(cfg).touch()
+
+    commands = []
+    with open(cfg, 'r') as f:
+        commands = json.loads(f.read() or "[]")
+
+    kv = {k['command'] : True for k in commands}
+
+    g = globals()
+
+    dirty = False
+
+    for k in [x for x in g]:
+        v = g[k]
+        if not isclass(v):
+            continue
+        if v.__module__ != __name__:
+            continue
+        if all([
+                not issubclass(v, sublime_plugin.ApplicationCommand),
+                not issubclass(v, sublime_plugin.WindowCommand),
+                not issubclass(v, sublime_plugin.TextCommand)
+            ]):
+            continue
+
+        if get_name_from_cls('command', v) in kv:
+            continue
+
+        commands.append({
+            'command': get_name_from_cls('command', v),
+            'caption': f'{cur_plugin_name}: {get_name_from_cls("caption", v)}',
+        })
+
+        dirty = True
+
+    if dirty:
+        with open(cfg, 'w') as f:
+            f.write(json.dumps(commands, indent=4)) # indent for pretty dump
+
+
+auto_generate_sublime_commands()
